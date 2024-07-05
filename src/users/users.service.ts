@@ -45,5 +45,18 @@ export class UsersService {
       where: { userId },
     });
   }
+
+  async deleteUser(id: number): Promise<Users> {
+    return this.prisma.users.delete({
+      where: { id },
+    });
+  }
+
+  async updateUser(id: number, data: Prisma.UsersUpdateInput): Promise<Users> {
+    return this.prisma.users.update({
+      where: { id },
+      data,
+    });
+  }
   
 }

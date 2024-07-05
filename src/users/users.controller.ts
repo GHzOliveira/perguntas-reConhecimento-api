@@ -1,19 +1,21 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { UserResponse, Users } from '@prisma/client';
+import { Prisma, UserResponse, Users } from '@prisma/client';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
   async createUser(@Body() userData: Users): Promise<Users> {
@@ -47,5 +49,18 @@ export class UsersController {
     @Param('id', ParseIntPipe) userId: number,
   ): Promise<UserResponse[]> {
     return this.usersService.findUserResponsesById(userId);
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<Users> {
+    return this.usersService.deleteUser(id);
+  }
+
+  @Patch(':id')
+  async updateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() userData: Prisma.UsersUpdateInput,
+  ): Promise<Users> {
+    return this.usersService.updateUser(id, userData);
   }
 }
