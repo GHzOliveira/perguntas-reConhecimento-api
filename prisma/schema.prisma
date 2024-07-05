@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Filial {
+  id                      Int     @id @default(autoincrement())
+  filial                  String
+  quantidadeColaboradores Int
+  users                   Users[]
+}
+
+model Admin {
+  id    Int    @id @default(autoincrement())
+  login String @unique
+  senha String
+  role  String
+}
+
+model FormVisibility {
+  id        Int     @id @default(autoincrement())
+  field     String  @unique
+  isVisible Boolean
+}
+
+model Users {
+  id               Int       @id @default(autoincrement())
+  nomeCompleto     String?
+  dataNascimento   DateTime?
+  email            String?   @unique
+  cpf              String?   @unique
+  tempoEmpresa     String?
+  areaTrabalho     String?
+  filialId         Int?
+  funcao           String?
+  genero           String?
+  cidade           String?
+  estado           String?
+  pais             String?
+  educacaoMetanoia Boolean?  @default(false)
+  respostas        UserResponse[]
+
+  filial Filial? @relation(fields: [filialId], references: [id])
+}
+
+model UserResponse {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  question Int
+  score    Float
+  user     Users    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, question])
+}
