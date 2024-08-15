@@ -8,14 +8,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { Prisma, UserResponse, Users } from '@prisma/client';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   async createUser(@Body() userData: Users): Promise<Users> {
@@ -51,6 +50,14 @@ export class UsersController {
     return this.usersService.findUserResponsesById(userId);
   }
 
+  @Get(':id/respondeuForm')
+  async getFormResponseStatus(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ respondeuForm: boolean }> {
+    const respondeuForm = await this.usersService.checkFormResponseById(id);
+    return { respondeuForm };
+  }
+
   @Delete(':id')
   async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<Users> {
     return this.usersService.deleteUser(id);
@@ -62,5 +69,12 @@ export class UsersController {
     @Body() userData: Prisma.UsersUpdateInput,
   ): Promise<Users> {
     return this.usersService.updateUser(id, userData);
+  }
+
+  @Patch(':id/markFormAsResponded')
+  async markFormAsResponded(
+    @Param('id', ParseIntPipe) userId: number,
+  ): Promise<Users> {
+    return this.usersService.markFormAsResponded(userId);
   }
 }

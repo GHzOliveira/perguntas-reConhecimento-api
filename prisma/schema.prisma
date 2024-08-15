@@ -37,8 +37,8 @@ model Users {
   id               Int       @id @default(autoincrement())
   nomeCompleto     String?
   dataNascimento   DateTime?
-  email            String?   @unique
-  cpf              String?   @unique
+  email            String?   
+  cpf              String?   
   tempoEmpresa     String?
   areaTrabalho     String?
   filialId         Int?
@@ -48,6 +48,7 @@ model Users {
   estado           String?
   pais             String?
   educacaoMetanoia Boolean?  @default(false)
+  respondeuForm    Boolean?  @default(false)
   respostas        UserResponse[]
 
   filial Filial? @relation(fields: [filialId], references: [id])
