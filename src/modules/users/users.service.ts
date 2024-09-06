@@ -4,7 +4,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+  ) {}
 
   async createUser(data: Prisma.UsersCreateInput): Promise<Users> {
     return this.prisma.users.create({
@@ -22,17 +24,24 @@ export class UsersService {
     return this.prisma.users.findMany();
   }
 
-  async submitUserResponse(userId: number, responses: Record<string, number>): Promise<void> {
-    const responseEntries = Object.entries(responses).map(([question, score]) => ({
-      userId,
-      question: parseInt(question, 10),
-      score,
-    }));
-  
+  async submitUserResponse(
+    userId: number,
+    responses: Record<string, number>,
+  ): Promise<void> {
+    const responseEntries = Object.entries(responses).map(
+      ([question, score]) => ({
+        userId,
+        question: parseInt(question, 10),
+        score,
+      }),
+    );
+
     await this.prisma.$transaction(
-      responseEntries.map(entry =>
+      responseEntries.map((entry) =>
         this.prisma.userResponse.upsert({
-          where: { userId_question: { userId: entry.userId, question: entry.question } },
+          where: {
+            userId_question: { userId: entry.userId, question: entry.question },
+          },
           update: entry,
           create: entry,
         }),
@@ -58,5 +67,19 @@ export class UsersService {
       data,
     });
   }
-  
+
+  async markFormAsResponded(userId: number): Promise<Users> {
+    return this.prisma.users.update({
+      where: { id: userId },
+      data: { respondeuForm: true },
+    });
+  }
+
+  async checkFormResponseById(id: number): Promise<boolean> {
+    const user = await this.prisma.users.findUnique({
+      where: { id },
+      select: { respondeuForm: true },
+    });
+    return user ? user.respondeuForm : false;
+  }
 }
