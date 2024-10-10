@@ -5,7 +5,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CalculoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getQuestionText(questionId: number): Promise<string> {
+    const question = await this.prisma.question.findUnique({
+      where: { id: questionId },
+    });
+    return question?.text || 'Pergunta não encontrada';
+  }
 
   async calculateGroupScores(userId: number) {
     const responses = await this.prisma.userResponse.findMany({
@@ -191,13 +198,17 @@ export class CalculoService {
       ...groupNames.map(groupName => ({ header: groupName, key: groupName, width: 20 }))
     ];
 
+    worksheet.autoFilter = {
+      from: 'A1',
+      to: 'T1'
+    };
+
     for (const user of users) {
       const scores = await this.calculateGroupScores(user.id);
       const row = { nome: user.nomeCompleto, ...scores };
       worksheet.addRow(row);
     }
-
-    // Adiciona a nova aba "inf.adicionais"
+    
     const additionalInfoSheet = workbook.addWorksheet('inf.adicionais');
 
     additionalInfoSheet.columns = [
@@ -208,6 +219,11 @@ export class CalculoService {
       { header: 'GENERO', key: 'genero', width: 20 },
       { header: 'CIDADE', key: 'cidade', width: 20 },
     ];
+
+    additionalInfoSheet.autoFilter = {
+      from: 'A1',
+      to: 'F1'
+    };
 
     for (const user of users) {
       const row = {
@@ -220,8 +236,7 @@ export class CalculoService {
       };
       additionalInfoSheet.addRow(row);
     }
-
-    // Adiciona a nova aba "Respostas"
+    
     const responsesSheet = workbook.addWorksheet('Respostas');
 
     responsesSheet.columns = [
@@ -235,22 +250,28 @@ export class CalculoService {
       { header: 'CIDADE', key: 'cidade', width: 20 },
     ];
 
+    responsesSheet.autoFilter = {
+      from: 'A1',
+      to: 'H1'
+    };
+
     for (const user of users) {
-        const sortedResponses = user.respostas.sort((a, b) => a.question - b.question);
-        for (const response of sortedResponses) {
-          const row = {
-            nome: user.nomeCompleto,
-            pergunta: response.question, //trocar para o texto da pergunta
-            valor: response.score,
-            tempoEmpresa: user.tempoEmpresa,
-            filial: user.filial?.filial,
-            funcao: user.funcao,
-            genero: user.genero,
-            cidade: user.cidade,
-          };
-          responsesSheet.addRow(row);
-        }
+      const sortedResponses = user.respostas.sort((a, b) => a.question - b.question);
+      for (const response of sortedResponses) {
+        const questionText = await this.getQuestionText(response.question);
+        const row = {
+          nome: user.nomeCompleto,
+          pergunta: questionText,
+          valor: response.score,
+          tempoEmpresa: user.tempoEmpresa,
+          filial: user.filial?.filial,
+          funcao: user.funcao,
+          genero: user.genero,
+          cidade: user.cidade,
+        };
+        responsesSheet.addRow(row);
       }
+    }
 
     res.setHeader(
       'Content-Type',
