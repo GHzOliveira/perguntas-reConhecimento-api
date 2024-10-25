@@ -36,11 +36,11 @@ model Users {
   escolaridade     String?
   estadoCivil      String?
   filhos           Int?
-  QuantidadeLivros Int?
+  quantidadeLivros Int?
   hobbie           String?
-  TempoCasaTrab    String?
-  ModeloTrabalho   String?
-  PartGrupos       String?
+  tempoCasaTrab    String?
+  modeloTrabalho   String?
+  partGrupos       String?
   tempoEmpresa     String?
   areaTrabalho     String?
   filialId         Int?
