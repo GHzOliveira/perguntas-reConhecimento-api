@@ -32,7 +32,15 @@ model Users {
   nomeCompleto     String?
   dataNascimento   DateTime?
   email            String?   
-  cpf              String?   
+  cpf              String?
+  escolaridade     String?
+  estadoCivil      String?
+  filhos           Int?
+  QuantidadeLivros Int?
+  hobbie           String?
+  TempoCasaTrab    String?
+  ModeloTrabalho   String?
+  PartGrupos       String?
   tempoEmpresa     String?
   areaTrabalho     String?
   filialId         Int?
