@@ -218,6 +218,14 @@ export class CalculoService {
       { header: 'FUNCAO', key: 'funcao', width: 20 },
       { header: 'GENERO', key: 'genero', width: 20 },
       { header: 'CIDADE', key: 'cidade', width: 20 },
+      { header: 'ESCOLARIDADE/FORMAÇÃO', key: 'escolaridade', width: 25 },
+      { header: 'ESTADO_CIVIL', key: 'estadoCivil', width: 20 },
+      { header: 'NUMERO_FILHOS', key: 'filhos', width: 15 },
+      { header: 'LIVROS_POR_ANO', key: 'quantidadeLivros', width: 15 },
+      { header: 'PRINCIPAL_ATIVIDADE_DIA', key: 'hobbie', width: 25 },
+      { header: 'TEMPO_CASA/TRABALHO', key: 'tempoCasaTrab', width: 20 },
+      { header: 'MODELO_TRABALHO', key: 'modeloTrabalho', width: 20 },
+      { header: 'PARTICIPACAO_GRUPO', key: 'partGrupos', width: 25 },
     ];
 
     additionalInfoSheet.autoFilter = {
@@ -233,9 +241,17 @@ export class CalculoService {
         funcao: user.funcao,
         genero: user.genero,
         cidade: user.cidade,
+        escolaridade: user.escolaridade,
+        estadoCivil: user.estadoCivil,
+        filhos: user.filhos,
+        quantidadeLivros: user.quantidadeLivros,
+        hobbie: user.hobbie,
+        tempoCasaTrab: user.tempoCasaTrab,
+        modeloTrabalho: user.modeloTrabalho,
+        partGrupos: user.partGrupos,
       };
       additionalInfoSheet.addRow(row);
-    }
+  }
     
     const responsesSheet = workbook.addWorksheet('Respostas');
 
