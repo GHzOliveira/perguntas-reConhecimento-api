@@ -4,14 +4,28 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_LOCAL")
 }
 
 model Filial {
   id                      Int     @id @default(autoincrement())
+  companyId               Int
   filial                  String
   quantidadeColaboradores Int
+  linkUnico               String  @unique
   users                   Users[]
+
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+model Company {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  filiais Filial[]
+
+  FormVisibility FormVisibility[]
+
+  Users Users[]
 }
 
 model Admin {
@@ -23,8 +37,13 @@ model Admin {
 
 model FormVisibility {
   id        Int     @id @default(autoincrement())
-  field     String  @unique
+  companyId Int
+  field     String
   isVisible Boolean
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, field]) // Cada empresa pode definir a visibilidade de cada campo
 }
 
 model Users {
@@ -43,7 +62,8 @@ model Users {
   partGrupos       String?
   tempoEmpresa     String?
   areaTrabalho     String?
-  filialId         Int?
+  filialId         Int
+  companyId        Int
   funcao           String?
   genero           String?
   cidade           String?
@@ -53,8 +73,10 @@ model Users {
   respondeuForm    Boolean?  @default(false)
   respostas        UserResponse[]
 
-  filial Filial? @relation(fields: [filialId], references: [id])
+  filial Filial @relation(fields: [filialId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
 }
+
 
 model UserResponse {
   id       Int      @id @default(autoincrement())

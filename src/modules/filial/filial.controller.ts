@@ -8,9 +8,7 @@ export class FilialController {
 
   @Post()
   create(@Body() createFilialDto: CreateFilialDto) {
-    return this.filialService.create(
-      createFilialDto.filial,
-      createFilialDto.quantidadeColaboradores,
+    return this.filialService.create(createFilialDto
     );
   }
 
