@@ -8,14 +8,20 @@ datasource db {
 }
 
 model Filial {
-  id                      Int     @id @default(autoincrement())
-  companyId               Int
-  filial                  String
+  id                      Int       @id @default(autoincrement())
+  companyId              Int
+  filial                 String
   quantidadeColaboradores Int
-  linkUnico               String  @unique
-  users                   Users[]
+  linkUnico              String  
+  status                 String    @default("ACTIVE")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?
+  
+  company                Company   @relation(fields: [companyId], references: [id])
+  users                  Users[]
 
-  company Company @relation(fields: [companyId], references: [id])
+  @@index([companyId, status])
 }
 
 model Company {

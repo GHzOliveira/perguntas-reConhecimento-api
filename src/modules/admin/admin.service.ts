@@ -1,23 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { IAdminRepository } from './interface/admin.interface';
 
 @Injectable()
 export class AdminService {
-    constructor(private prisma: PrismaService) {}
+  constructor(
+    @Inject('IAdminRepository')
+    private readonly adminRepository: IAdminRepository,
+    private readonly jwtService: JwtService,
+  ) {}
 
-    async validateAdmin(loginDto: LoginDto): Promise<boolean> {
-      const { login, senha } = loginDto;
-      if (!login) {
-          throw new Error('Login is required');
-      }
-      const admin = await this.prisma.admin.findUnique({
-        where: {
-          login,
-        },
-      });
-  
-      return admin && admin.senha === senha && admin.role === 'ADMIN';
+  async validateAdmin(loginDto: LoginDto): Promise<{ token: string }> {
+    const admin = await this.adminRepository.findByLogin(loginDto.login);
+    
+    if (!admin) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    const isPasswordValid = await bcrypt.compare(loginDto.senha, admin.senha);
+
+    if (!isPasswordValid || admin.role !== 'ADMIN') {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    const token = this.jwtService.sign({ 
+      sub: admin.id, 
+      login: admin.login,
+      role: admin.role 
+    });
+
+    return { token };
+  }
+
+  async createAdmin(createAdminDto: CreateAdminDto) {
+    const hashedPassword = await bcrypt.hash(createAdminDto.senha, 10);
+    
+    return this.adminRepository.create({
+      ...createAdminDto,
+      senha: hashedPassword,
+    });
   }
 }
-
