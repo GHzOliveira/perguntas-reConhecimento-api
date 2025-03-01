@@ -2,22 +2,24 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Filial } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { IFilialRepository } from 'src/modules/filial/interface/filial.interface';
+import { IFilialRepository } from 'src/interface/filial.interface';
 import {
   CreateFiliaisDto,
   CreateFilialDto,
-} from 'src/modules/filial/dto/create-filial.dto';
+} from 'src/dto/dto-filial/create-filial.dto';
 import { FilialException } from 'src/exceptions/filial.exception';
-import { LinkService } from 'src/modules/filial/services/link.service';
+import { LinkService } from 'src/services/link.service';
+import { CompanyService } from 'src/services/company.service';
 
 @Injectable()
 export class FilialRepository implements IFilialRepository {
   private readonly logger = new Logger(FilialRepository.name);
   private readonly domain = 'http://localhost:5173';
-
+  
   constructor(
     private readonly prisma: PrismaService,
     private readonly linkService: LinkService,
+    private readonly companyService: CompanyService,
   ) {}
 
   async createMany(
@@ -25,12 +27,7 @@ export class FilialRepository implements IFilialRepository {
   ): Promise<{ filiais: Filial[]; linkUnico: string }> {
     try {
       return await this.prisma.$transaction(async (prisma) => {
-        const company = await prisma.company.create({
-          data: {
-            name: `Company-${uuidv4()}`,
-          },
-        });
-  
+        const company = await this.companyService.create();
         const companyLink = this.linkService.generateCompanyLink(company.id, this.domain);
   
         await prisma.filial.createMany({
@@ -83,6 +80,36 @@ export class FilialRepository implements IFilialRepository {
     }
   }
 
+  async addToCompany(companyId: number, createFilialDto: CreateFilialDto): Promise<Filial> {
+    try {
+      const existingFilial = await this.prisma.filial.findFirst({
+        where: { companyId },
+      });
+  
+      if (!existingFilial) {
+        const company = await this.prisma.company.findUnique({
+          where: { id: companyId },
+        });
+  
+        if (!company) {
+          throw new FilialException('Empresa não encontrada');
+        }
+      }
+  
+      return await this.prisma.filial.create({
+        data: {
+          filial: createFilialDto.filial,
+          quantidadeColaboradores: createFilialDto.quantidadeColaboradores,
+          companyId: companyId,
+          linkUnico: existingFilial.linkUnico,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Erro ao adicionar filial à empresa ${companyId}: ${error.message}`);
+      throw new FilialException(`Erro ao adicionar filial à empresa ${companyId}`);
+    }
+  }
+
   async delete(id: number): Promise<Filial> {
     try {
       return await this.prisma.filial.delete({
@@ -100,6 +127,8 @@ export class FilialRepository implements IFilialRepository {
         select: {
           id: true,
           filial: true,
+          companyId: true,
+          quantidadeColaboradores: true
         },
       });
     } catch (error) {
@@ -116,6 +145,22 @@ export class FilialRepository implements IFilialRepository {
     } catch (error) {
       this.logger.error(`Erro ao buscar filial ${id}: ${error.message}`);
       throw new FilialException(`Erro ao buscar filial ${id}`);
+    }
+  }
+
+
+  async update(id: number, updateData: Partial<Filial>): Promise<Filial> {
+    try {
+      return await this.prisma.filial.update({
+        where: { id },
+        data: {
+          filial: updateData.filial,
+          quantidadeColaboradores: updateData.quantidadeColaboradores,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Erro ao atualizar filial ${id}: ${error.message}`);
+      throw new FilialException(`Erro ao atualizar filial ${id}`);
     }
   }
 }

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Admin } from '@prisma/client';
-import { IAdminRepository } from 'src/modules/admin/interface/admin.interface';
-import { CreateAdminDto } from 'src/modules/admin/dto/create-admin.dto';
+import { CreateAdminDto } from 'src/dto/dto-admin/create-admin.dto';
+import { IAdminRepository } from 'src/interface/admin.interface';
 
 @Injectable()
 export class AdminRepository implements IAdminRepository {

@@ -9,29 +9,30 @@ datasource db {
 
 model Filial {
   id                      Int       @id @default(autoincrement())
-  companyId              Int
-  filial                 String
+  companyId               Int
+  filial                  String
   quantidadeColaboradores Int
-  linkUnico              String  
-  status                 String    @default("ACTIVE")
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  deletedAt              DateTime?
-  
-  company                Company   @relation(fields: [companyId], references: [id])
-  users                  Users[]
+  linkUnico               String
+  status                  String    @default("ACTIVE")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+
+  company Company @relation(fields: [companyId], references: [id])
+  users   Users[]
 
   @@index([companyId, status])
 }
 
 model Company {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
   filiais Filial[]
 
-  FormVisibility FormVisibility[]
+  FormBuilder FormBuilder[]
 
-  Users Users[]
+  Users       Users[]
+  DynamicForm DynamicForm[]
 }
 
 model Admin {
@@ -41,7 +42,7 @@ model Admin {
   role  String
 }
 
-model FormVisibility {
+model FormBuilder {
   id        Int     @id @default(autoincrement())
   companyId Int
   field     String
@@ -49,14 +50,26 @@ model FormVisibility {
 
   company Company @relation(fields: [companyId], references: [id])
 
-  @@unique([companyId, field]) // Cada empresa pode definir a visibilidade de cada campo
+  @@unique([companyId, field])
+}
+
+// Adicione ao seu schema.prisma
+model DynamicForm {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  formData  Json // Para armazenar a estrutura completa do formulário
+  name      String   @default("Formulário sem nome")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
 }
 
 model Users {
-  id               Int       @id @default(autoincrement())
+  id               Int            @id @default(autoincrement())
   nomeCompleto     String?
   dataNascimento   DateTime?
-  email            String?   
+  email            String?
   cpf              String?
   escolaridade     String?
   estadoCivil      String?
@@ -75,26 +88,25 @@ model Users {
   cidade           String?
   estado           String?
   pais             String?
-  educacaoMetanoia Boolean?  @default(false)
-  respondeuForm    Boolean?  @default(false)
+  educacaoMetanoia Boolean?       @default(false)
+  respondeuForm    Boolean?       @default(false)
   respostas        UserResponse[]
 
-  filial Filial @relation(fields: [filialId], references: [id])
+  filial  Filial   @relation(fields: [filialId], references: [id])
   company Company? @relation(fields: [companyId], references: [id])
 }
 
-
 model UserResponse {
-  id       Int      @id @default(autoincrement())
+  id       Int   @id @default(autoincrement())
   userId   Int
   question Int
   score    Float
-  user     Users    @relation(fields: [userId], references: [id])
+  user     Users @relation(fields: [userId], references: [id])
 
   @@unique([userId, question])
 }
 
 model Question {
-  id    Int    @id @default(autoincrement())
-  text  String
+  id   Int    @id @default(autoincrement())
+  text String
 }
