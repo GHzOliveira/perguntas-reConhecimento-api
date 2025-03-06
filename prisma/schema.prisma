@@ -53,12 +53,13 @@ model FormBuilder {
   @@unique([companyId, field])
 }
 
-// Adicione ao seu schema.prisma
 model DynamicForm {
   id        Int      @id @default(autoincrement())
   companyId Int
-  formData  Json // Para armazenar a estrutura completa do formulário
+  formData  Json
   name      String   @default("Formulário sem nome")
+  description String?
+  isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

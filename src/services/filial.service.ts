@@ -42,4 +42,22 @@ export class FilialService {
     this.logger.log(`Buscando filial: ${id}`);
     return await this.filialRepository.findOne(id);
   }
+
+    /**
+   * Busca todas as filiais de uma empresa específica
+   * @param companyId ID da empresa
+   * @returns Array de filiais pertencentes à empresa
+   */
+    async findByCompanyId(companyId: number) {
+      this.logger.log(`Buscando filiais da empresa: ${companyId}`);
+      const filiais = await this.filialRepository.findByCompanyId(companyId);
+      
+      if (!filiais || filiais.length === 0) {
+        this.logger.warn(`Nenhuma filial encontrada para a empresa ${companyId}`);
+      } else {
+        this.logger.log(`Encontradas ${filiais.length} filiais para a empresa ${companyId}`);
+      }
+      
+      return filiais;
+    }
 }

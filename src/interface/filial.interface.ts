@@ -7,4 +7,5 @@ export interface IFilialRepository {
   delete(id: number): Promise<Filial>;
   findAll(): Promise<Partial<Filial>[]>;
   findOne(id: number): Promise<Filial | null>;
+  findByCompanyId(companyId: number): Promise<Partial<Filial>[]>;
 }

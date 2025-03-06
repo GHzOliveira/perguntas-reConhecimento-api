@@ -148,6 +148,33 @@ export class FilialRepository implements IFilialRepository {
     }
   }
 
+    /**
+   * Busca todas as filiais de uma empresa específica
+   * @param companyId ID da empresa
+   * @returns Array de filiais da empresa
+   */
+    async findByCompanyId(companyId: number): Promise<Partial<Filial>[]> {
+      try {
+        const filiais = await this.prisma.filial.findMany({
+          where: { 
+            companyId,
+            status: 'ACTIVE'
+          },
+          select: {
+            id: true,
+            filial: true,
+            companyId: true,
+            quantidadeColaboradores: true
+          }
+        });
+  
+        return filiais;
+      } catch (error) {
+        this.logger.error(`Erro ao buscar filiais da empresa ${companyId}: ${error.message}`);
+        throw new FilialException(`Erro ao buscar filiais da empresa ${companyId}`);
+      }
+    }
+
 
   async update(id: number, updateData: Partial<Filial>): Promise<Filial> {
     try {
