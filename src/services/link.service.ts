@@ -4,9 +4,14 @@ import { ILinkService } from 'src/interface/link.interface';
 
 @Injectable()
 export class LinkService implements ILinkService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly domain: string;
 
-  generateCompanyLink(companyId: number, domain: string): string {
+  constructor(private readonly configService: ConfigService) {
+    this.domain =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+  }
+
+  generateCompanyLink(companyId: number, domain: string = this.domain): string {
     return `${domain}/identificacao/${companyId}`;
   }
 }

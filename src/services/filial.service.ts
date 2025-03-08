@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateFiliaisDto, CreateFilialDto, UpdateFilialDto } from 'src/dto/dto-filial/create-filial.dto';
+import { CreateFiliaisDto, CreateFilialDto } from 'src/dto/dto-filial/create-filial.dto';
+import { UpdateFilialDto } from 'src/dto/dto-filial/update-filial.dto';
 import { FilialRepository } from 'src/repositories/filial.repositorie';
+import { FilialResponseDto } from 'src/dto/dto-filial/filial-response.dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class FilialService {
@@ -10,54 +13,56 @@ export class FilialService {
 
   async createMany(createFiliaisDto: CreateFiliaisDto) {
     this.logger.log(`Criando novas filiais: ${createFiliaisDto.filiais}`);
-    return await this.filialRepository.createMany(createFiliaisDto);
+    const resultado = await this.filialRepository.createMany(createFiliaisDto);
+    return resultado;
   }
 
-  async create(createFilialDto: CreateFilialDto) {
+  async create(createFilialDto: CreateFilialDto): Promise<FilialResponseDto> {
     this.logger.log(`Criando nova filial: ${createFilialDto.filial}`);
-    return await this.filialRepository.create(createFilialDto);
+    const filial = await this.filialRepository.create(createFilialDto);
+    return plainToClass(FilialResponseDto, filial);
   }
 
-  async addToCompany(companyId: number, createFilialDto: CreateFilialDto) {
+  async addToCompany(companyId: number, createFilialDto: CreateFilialDto): Promise<FilialResponseDto> {
     this.logger.log(`Adicionando nova filial à empresa ${companyId}`);
-    return await this.filialRepository.addToCompany(companyId, createFilialDto);
+    const filial = await this.filialRepository.addToCompany(companyId, createFilialDto);
+    return plainToClass(FilialResponseDto, filial);
   }
 
-  async delete(filialId: number) {
+  async delete(filialId: number): Promise<FilialResponseDto> {
     this.logger.log(`Deletando filial: ${filialId}`);
-    return await this.filialRepository.delete(filialId);
+    const filial = await this.filialRepository.delete(filialId);
+    return plainToClass(FilialResponseDto, filial);
   }
 
-  async update(id: number, updateFilialDto: UpdateFilialDto) {
+  async update(id: number, updateFilialDto: UpdateFilialDto): Promise<FilialResponseDto> {
     this.logger.log(`Atualizando filial ${id}`);
-    return await this.filialRepository.update(id, updateFilialDto);
+    const filial = await this.filialRepository.update(id, updateFilialDto);
+    return plainToClass(FilialResponseDto, filial);
   }
 
-  async findAll() {
+  async findAll(): Promise<FilialResponseDto[]> {
     this.logger.log('Buscando todas as filiais');
-    return await this.filialRepository.findAll();
+    const filiais = await this.filialRepository.findAll();
+    return filiais.map(filial => plainToClass(FilialResponseDto, filial));
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<FilialResponseDto> {
     this.logger.log(`Buscando filial: ${id}`);
-    return await this.filialRepository.findOne(id);
+    const filial = await this.filialRepository.findOne(id);
+    return plainToClass(FilialResponseDto, filial);
   }
 
-    /**
-   * Busca todas as filiais de uma empresa específica
-   * @param companyId ID da empresa
-   * @returns Array de filiais pertencentes à empresa
-   */
-    async findByCompanyId(companyId: number) {
-      this.logger.log(`Buscando filiais da empresa: ${companyId}`);
-      const filiais = await this.filialRepository.findByCompanyId(companyId);
-      
-      if (!filiais || filiais.length === 0) {
-        this.logger.warn(`Nenhuma filial encontrada para a empresa ${companyId}`);
-      } else {
-        this.logger.log(`Encontradas ${filiais.length} filiais para a empresa ${companyId}`);
-      }
-      
-      return filiais;
+  async findByCompanyId(companyId: number): Promise<FilialResponseDto[]> {
+    this.logger.log(`Buscando filiais da empresa: ${companyId}`);
+    const filiais = await this.filialRepository.findByCompanyId(companyId);
+    
+    if (!filiais || filiais.length === 0) {
+      this.logger.warn(`Nenhuma filial encontrada para a empresa ${companyId}`);
+    } else {
+      this.logger.log(`Encontradas ${filiais.length} filiais para a empresa ${companyId}`);
     }
+    
+    return filiais.map(filial => plainToClass(FilialResponseDto, filial));
+  }
 }

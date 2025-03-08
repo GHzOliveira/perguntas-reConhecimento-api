@@ -67,29 +67,14 @@ model DynamicForm {
 }
 
 model Users {
-  id               Int            @id @default(autoincrement())
-  nomeCompleto     String?
-  dataNascimento   DateTime?
-  email            String?
-  cpf              String?
-  escolaridade     String?
-  estadoCivil      String?
-  filhos           Int?
-  quantidadeLivros Int?
-  hobbie           String?
-  tempoCasaTrab    String?
-  modeloTrabalho   String?
-  partGrupos       String?
-  tempoEmpresa     String?
-  areaTrabalho     String?
-  filialId         Int
-  companyId        Int
-  funcao           String?
-  genero           String?
-  cidade           String?
-  estado           String?
-  pais             String?
-  educacaoMetanoia Boolean?       @default(false)
+  id                Int      @id @default(autoincrement())
+  nome              String   // Nome completo do usuário (campo fixo)
+  email             String   @unique
+  filialId          Int
+  companyId         Int
+  dynamicResponses  Json?    // Armazena as respostas do formulário dinâmico em formato JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   respondeuForm    Boolean?       @default(false)
   respostas        UserResponse[]
 
