@@ -5,23 +5,27 @@ export class UserResponseDto {
   @ApiProperty({ description: 'ID do usuário', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'Nome completo do usuário', example: 'João da Silva' })
-  nomeCompleto: string;
+  @ApiProperty({ description: 'Nome do usuário', example: 'João da Silva' })
+  nome: string;
 
   @ApiProperty({ description: 'Email do usuário', example: 'joao@exemplo.com' })
   email: string;
 
-  @ApiPropertyOptional({ description: 'Data de nascimento', example: '1990-01-01T00:00:00.000Z' })
-  dataNascimento?: Date;
-
-  @ApiPropertyOptional({ description: 'CPF do usuário', example: '123.456.789-00' })
-  cpf?: string;
-
-  @ApiPropertyOptional({ description: 'ID da filial', example: 1 })
+  @ApiProperty({ description: 'ID da filial', example: 1 })
   filialId: number;
 
-  @ApiPropertyOptional({ description: 'ID da empresa', example: 1 })
+  @ApiProperty({ description: 'ID da empresa', example: 1 })
   companyId: number;
+
+  @ApiProperty({ description: 'Indica se o usuário respondeu o formulário', example: true })
+  respondeuForm: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Campos dinâmicos não fixos',
+    type: 'object',
+    additionalProperties: true
+  })
+  dynamicResponses?: Record<string, any>;
 }
 
 export class UserResponseArrayDto extends StandardResponseDto<UserResponseDto[]> {}

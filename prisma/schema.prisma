@@ -68,14 +68,14 @@ model DynamicForm {
 
 model Users {
   id                Int      @id @default(autoincrement())
-  nome              String   // Nome completo do usuário (campo fixo)
+  nome              String
   email             String   @unique
   filialId          Int
   companyId         Int
-  dynamicResponses  Json?    // Armazena as respostas do formulário dinâmico em formato JSON
+  dynamicResponses  Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  respondeuForm    Boolean?       @default(false)
+  respondeuForm    Boolean? @default(false)
   respostas        UserResponse[]
 
   filial  Filial   @relation(fields: [filialId], references: [id])

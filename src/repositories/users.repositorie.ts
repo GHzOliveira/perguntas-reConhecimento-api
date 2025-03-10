@@ -4,6 +4,7 @@ import { Users, UserResponse, Prisma } from '@prisma/client';
 import { IUsersRepository } from '../interface/users.interface';
 import { CreateUserDto } from '../dto/dto-users/create-user.dto';
 import { UsersException } from '../exceptions/users.exception';
+import { UpdateUserDto } from 'src/dto/dto-users/update-user.dto';
 
 @Injectable()
 export class UsersRepository implements IUsersRepository {
@@ -13,10 +14,12 @@ export class UsersRepository implements IUsersRepository {
 
   async create(createUserDto: CreateUserDto): Promise<Users> {
     try {
-      const { filialId, companyId, ...userData } = createUserDto;
+      const { filialId, companyId, dynamicResponses, ...userData } = createUserDto;
+      
       return await this.prisma.users.create({
         data: {
           ...userData,
+          dynamicResponses: dynamicResponses || {},
           filial: { connect: { id: filialId } },
           company: { connect: { id: companyId } },
         },
@@ -84,17 +87,74 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
-  async update(id: number, data: Prisma.UsersUpdateInput): Promise<Users> {
+  async update(id: number, data: UpdateUserDto): Promise<Users> {
     try {
+      const { filialId, companyId, dynamicResponses, ...updateData } = data;
+      const updatePayload: any = { ...updateData };
+      if (filialId) {
+        updatePayload.filial = { connect: { id: filialId } };
+      }
+      
+      if (companyId) {
+        updatePayload.company = { connect: { id: companyId } };
+      }
+      
+      if (dynamicResponses) {
+        updatePayload.dynamicResponses = dynamicResponses;
+      }
+
       return await this.prisma.users.update({
         where: { id },
-        data,
+        data: updatePayload,
       });
     } catch (error) {
       this.logger.error(`Erro ao atualizar usuário ${id}: ${error.message}`);
       throw new UsersException(`Erro ao atualizar usuário ${id}`);
     }
   }
+
+  async updateDynamicResponses(
+    userId: number,
+    dynamicData: Record<string, any>,
+  ): Promise<Users> {
+    try {
+      const currentUser = await this.findById(userId);
+      if (!currentUser) {
+        throw new UsersException(`Usuário ${userId} não encontrado`);
+      }
+
+      const currentDynamicData = currentUser.dynamicResponses as Record<string, any> || {};
+      const mergedDynamicData = { ...currentDynamicData, ...dynamicData };
+
+      return await this.prisma.users.update({
+        where: { id: userId },
+        data: { dynamicResponses: mergedDynamicData },
+      });
+    } catch (error) {
+      this.logger.error(`Erro ao atualizar respostas dinâmicas do usuário ${userId}: ${error.message}`);
+      throw new UsersException(`Erro ao atualizar respostas dinâmicas do usuário ${userId}`);
+    }
+  }
+
+  async findDynamicResponses(userId: number): Promise<Record<string, any> | null> {
+    try {
+      const user = await this.prisma.users.findUnique({
+        where: { id: userId },
+        select: { dynamicResponses: true },
+      });
+      
+      if (!user || !user.dynamicResponses) {
+        return null;
+      }
+      
+      return user.dynamicResponses as Record<string, any>;
+    } catch (error) {
+      this.logger.error(`Erro ao buscar respostas dinâmicas do usuário ${userId}: ${error.message}`);
+      throw new UsersException(`Erro ao buscar respostas dinâmicas do usuário ${userId}`);
+    }
+  }
+
+  
 
   async submitResponses(
     userId: number,

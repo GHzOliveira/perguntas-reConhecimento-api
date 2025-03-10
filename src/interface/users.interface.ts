@@ -1,5 +1,6 @@
-import { Users, UserResponse, Prisma } from '@prisma/client';
-import { CreateUserDto } from '../dto/dto-users/create-user.dto';
+import { Users, UserResponse } from '@prisma/client';
+import { CreateUserDto } from 'src/dto/dto-users/create-user.dto';
+import { UpdateUserDto } from '../dto/dto-users/update-user.dto';
 
 export interface IUsersRepository {
   create(data: CreateUserDto): Promise<Users>;
@@ -7,8 +8,16 @@ export interface IUsersRepository {
   findAll(): Promise<Users[]>;
   findByCompanyId(companyId: number): Promise<Users[]>;
   delete(id: number): Promise<Users>;
-  update(id: number, data: Prisma.UsersUpdateInput): Promise<Users>;
-  submitResponses(userId: number, responses: Record<string, number>): Promise<void>;
+  update(id: number, data: UpdateUserDto): Promise<Users>;
+  updateDynamicResponses(
+    userId: number,
+    dynamicData: Record<string, any>,
+  ): Promise<Users>;
+  findDynamicResponses(userId: number): Promise<Record<string, any> | null>;
+  submitResponses(
+    userId: number,
+    responses: Record<string, number>,
+  ): Promise<void>;
   findResponsesById(userId: number): Promise<UserResponse[]>;
   markFormAsResponded(userId: number): Promise<Users>;
   checkFormResponse(id: number): Promise<boolean>;

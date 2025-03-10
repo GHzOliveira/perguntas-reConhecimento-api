@@ -1,11 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CalculoService {
+  private readonly logger = new Logger(CalculoService.name);
   constructor(private readonly prisma: PrismaService) {}
+
+  private getDynamicField(user: any, fieldName: string, defaultValue: any = ''): any {
+    if (user[fieldName] !== undefined) {
+      return user[fieldName];
+    }
+    
+    if (user.dynamicResponses && user.dynamicResponses[fieldName] !== undefined) {
+      return user.dynamicResponses[fieldName];
+    }
+    return defaultValue;
+  }
 
   async getQuestionText(questionId: number): Promise<string> {
     const question = await this.prisma.question.findUnique({
@@ -205,7 +217,7 @@ export class CalculoService {
 
     for (const user of users) {
       const scores = await this.calculateGroupScores(user.id);
-      const row = { nome: user.nomeCompleto, ...scores };
+      const row = { nome: user.nome, ...scores };
       worksheet.addRow(row);
     }
     
@@ -230,28 +242,28 @@ export class CalculoService {
 
     additionalInfoSheet.autoFilter = {
       from: 'A1',
-      to: 'F1'
+      to: 'N1'
     };
 
     for (const user of users) {
       const row = {
-        nome: user.nomeCompleto,
-        tempoEmpresa: user.tempoEmpresa,
+        nome: user.nome,
+        tempoEmpresa: this.getDynamicField(user, 'tempoEmpresa'),
         filial: user.filial?.filial,
-        funcao: user.funcao,
-        genero: user.genero,
-        cidade: user.cidade,
-        escolaridade: user.escolaridade,
-        estadoCivil: user.estadoCivil,
-        filhos: user.filhos,
-        quantidadeLivros: user.quantidadeLivros,
-        hobbie: user.hobbie,
-        tempoCasaTrab: user.tempoCasaTrab,
-        modeloTrabalho: user.modeloTrabalho,
-        partGrupos: user.partGrupos,
+        funcao: this.getDynamicField(user, 'funcao'),
+        genero: this.getDynamicField(user, 'genero'),
+        cidade: this.getDynamicField(user, 'cidade'),
+        escolaridade: this.getDynamicField(user, 'escolaridade'),
+        estadoCivil: this.getDynamicField(user, 'estadoCivil'),
+        filhos: this.getDynamicField(user, 'filhos'),
+        quantidadeLivros: this.getDynamicField(user, 'quantidadeLivros'),
+        hobbie: this.getDynamicField(user, 'hobbie'),
+        tempoCasaTrab: this.getDynamicField(user, 'tempoCasaTrab'),
+        modeloTrabalho: this.getDynamicField(user, 'modeloTrabalho'),
+        partGrupos: this.getDynamicField(user, 'partGrupos'),
       };
       additionalInfoSheet.addRow(row);
-  }
+    }
     
     const responsesSheet = workbook.addWorksheet('Respostas');
 
@@ -276,14 +288,14 @@ export class CalculoService {
       for (const response of sortedResponses) {
         const questionText = await this.getQuestionText(response.question);
         const row = {
-          nome: user.nomeCompleto,
+          nome: user.nome,
           pergunta: questionText,
           valor: response.score,
-          tempoEmpresa: user.tempoEmpresa,
+          tempoEmpresa: this.getDynamicField(user, 'tempoEmpresa'),
           filial: user.filial?.filial,
-          funcao: user.funcao,
-          genero: user.genero,
-          cidade: user.cidade,
+          funcao: this.getDynamicField(user, 'funcao'),
+          genero: this.getDynamicField(user, 'genero'),
+          cidade: this.getDynamicField(user, 'cidade'),
         };
         responsesSheet.addRow(row);
       }
