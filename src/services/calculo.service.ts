@@ -3,27 +3,54 @@ import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+interface GroupScores {
+  [groupName: string]: string;
+}
+
+interface GroupConfig {
+  questionIds: number[];
+  percentageReference: number;
+}
+
 @Injectable()
 export class CalculoService {
   private readonly logger = new Logger(CalculoService.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  private getDynamicField(user: any, fieldName: string, defaultValue: any = ''): any {
+  private getDynamicField(
+    user: any,
+    fieldName: string,
+    defaultValue: any = '',
+  ): any {
     if (user[fieldName] !== undefined) {
       return user[fieldName];
     }
-    
-    if (user.dynamicResponses && user.dynamicResponses[fieldName] !== undefined) {
+
+    if (
+      user.dynamicResponses &&
+      user.dynamicResponses[fieldName] !== undefined
+    ) {
       return user.dynamicResponses[fieldName];
     }
     return defaultValue;
   }
 
   async getQuestionText(questionId: number): Promise<string> {
-    const question = await this.prisma.question.findUnique({
-      where: { id: questionId },
-    });
-    return question?.text || 'Pergunta não encontrada';
+    try {
+      const question = await this.prisma.question.findUnique({
+        where: { id: questionId },
+      });
+      
+      if (!question) {
+        this.logger.warn(`Pergunta não encontrada para ID: ${questionId}`);
+        return 'Pergunta não encontrada';
+      }
+      
+      return question.text;
+    } catch (error) {
+      this.logger.error(`Erro ao buscar pergunta ${questionId}: ${error.message}`);
+      throw new Error(`Falha ao buscar texto da pergunta: ${error.message}`);
+    }
   }
 
   async calculateGroupScores(userId: number) {
@@ -31,32 +58,77 @@ export class CalculoService {
       where: { userId: userId },
     });
 
-    const groups = {
-      'modelo de liderança': [1, 7, 16, 4, 10, 13],
-      'propósito': [6, 9, 14, 2, 11, 17],
-      'valores': [3, 12, 18, 5, 8, 15],
-      'Estrutura Sistêmica': [19, 34, 28, 31],
-      'DF Intenção': [24, 27, 20, 29],
-      'DP Vocação': [21, 30, 32, 36],
-      'DC Conexão': [26, 35, 22, 38],
-      'DE Valoração': [25, 37, 23, 33],
-      'Roda do Aprendizado - Lirença educadora': [39, 50],
-      'Conversa de Valor - Qualidade de diálogo': [40, 51],
-      'Princípio da Linha d`água - Autonomia e autoridade': [41, 52],
-      'Experiência - Fidelização e engajamento': [53, 42],
-      'Ilha das Competências - Pontencial da equipe': [54, 53],
-      'Operação Curiosidade - Comportamento empreendedor': [44, 55],
-      'Metaprojeto - Trabalho com significado': [45, 56],
-      'Metaprocesso - Eficácia operacional': [46, 57],
-      'Musa - Inovação e criatividade': [58, 47],
-      'Balanço das Riquezas - Resultados plenos': [59, 48],
-      'Planta de Serviços - Momentos da verdade': [49, 60],
+    const GROUPS_CONFIG: Record<string, GroupConfig> = {
+      'modelo de liderança': {
+        questionIds: [1, 7, 16, 4, 10, 13],
+        percentageReference: 60,
+      },
+      propósito: {
+        questionIds: [6, 9, 14, 2, 11, 17],
+        percentageReference: 60,
+      },
+      valores: { questionIds: [3, 12, 18, 5, 8, 15], percentageReference: 60 },
+      'Estrutura Sistêmica': {
+        questionIds: [19, 34, 28, 31],
+        percentageReference: 60,
+      },
+      'DF Intenção': { questionIds: [24, 27, 20, 29], percentageReference: 60 },
+      'DP Vocação': { questionIds: [21, 30, 32, 36], percentageReference: 60 },
+      'DC Conexão': { questionIds: [26, 35, 22, 38], percentageReference: 60 },
+      'DE Valoração': {
+        questionIds: [25, 37, 23, 33],
+        percentageReference: 60,
+      },
+      'Roda do Aprendizado - Licença educadora': {
+        questionIds: [39, 50],
+        percentageReference: 60,
+      },
+      'Conversa de Valor - Qualidade de diálogo': {
+        questionIds: [40, 51],
+        percentageReference: 60,
+      },
+      'Princípio da Linha d`água - Autonomia e autoridade': {
+        questionIds: [41, 52],
+        percentageReference: 60,
+      },
+      'Experiência - Fidelização e engajamento': {
+        questionIds: [53, 42],
+        percentageReference: 60,
+      },
+      'Ilha das Competências - Pontencial da equipe': {
+        questionIds: [54, 53],
+        percentageReference: 60,
+      },
+      'Operação Curiosidade - Comportamento empreendedor': {
+        questionIds: [44, 55],
+        percentageReference: 60,
+      },
+      'Metaprojeto - Trabalho com significado': {
+        questionIds: [45, 56],
+        percentageReference: 60,
+      },
+      'Metaprocesso - Eficácia operacional': {
+        questionIds: [46, 57],
+        percentageReference: 60,
+      },
+      'Musa - Inovação e criatividade': {
+        questionIds: [58, 47],
+        percentageReference: 60,
+      },
+      'Balanço das Riquezas - Resultados plenos': {
+        questionIds: [59, 48],
+        percentageReference: 60,
+      },
+      'Planta de Serviços - Momentos da verdade': {
+        questionIds: [49, 60],
+        percentageReference: 60,
+      },
     };
 
     const percentageReferences = {
       'modelo de liderança': 60,
-      'propósito': 60,
-      'valores': 60,
+      propósito: 60,
+      valores: 60,
       'Estrutura Sistêmica': 40,
       'DF Intenção': 40,
       'DP Vocação': 40,
@@ -66,7 +138,7 @@ export class CalculoService {
       'Conversa de Valor - Qualidade de diálogo': 20,
       'Princípio da Linha d`água - Autonomia e autoridade': 20,
       'Experiência - Fidelização e engajamento': 20,
-      'Ilha das Competências - Pontencial da equipe': 20,
+      'Ilha das Competências - Potencial da equipe': 20,
       'Operação Curiosidade - Comportamento empreendedor': 20,
       'Metaprojeto - Trabalho com significado': 20,
       'Metaprocesso - Eficácia operacional': 20,
@@ -77,14 +149,15 @@ export class CalculoService {
 
     const result = {};
 
-    for (const [groupName, questionNumbers] of Object.entries(groups)) {
+    for (const [groupName, config] of Object.entries(GROUPS_CONFIG)) {
       const totalScore = responses
-        .filter((response) => questionNumbers.includes(response.question))
+        .filter((response) => config.questionIds.includes(response.question))
         .reduce((sum, response) => sum + response.score, 0);
-
+  
       const percentageReference = percentageReferences[groupName];
       result[groupName] = ((totalScore / percentageReference) * 100).toFixed(1);
     }
+  
 
     return result;
   }
@@ -122,7 +195,12 @@ export class CalculoService {
     worksheet.columns = [
       { header: 'ASPECTO', key: 'aspect', width: 20 },
       { header: 'ELEMENTO', key: 'groupName', width: 50 },
-      { header: 'RESULTADO EM %', key: 'score', width: 20, style: { alignment: { horizontal: 'center' } } },
+      {
+        header: 'RESULTADO EM %',
+        key: 'score',
+        width: 20,
+        style: { alignment: { horizontal: 'center' } },
+      },
     ];
 
     worksheet.getRow(1).eachCell((cell) => {
@@ -146,7 +224,11 @@ export class CalculoService {
         aspectScores.length
       ).toFixed(1);
 
-      const row = worksheet.addRow({ aspect, groupName: '', score: aspectAverage });
+      const row = worksheet.addRow({
+        aspect,
+        groupName: '',
+        score: aspectAverage,
+      });
 
       let fillColor;
       if (aspect === 'FILOSOFIA') {
@@ -188,129 +270,195 @@ export class CalculoService {
   }
 
   async generateExcelWithUserResults(res: Response) {
-    const users = await this.prisma.users.findMany({
-      include: { respostas: true, filial: true },
-    });
+    try {
+      this.logger.log('Iniciando geração do Excel com resultados de usuários');
+      
+      const users = await this.prisma.users.findMany({
+        include: { respostas: true, filial: true },
+      });
+      
+      this.logger.log(`Recuperados ${users.length} usuários para processamento`);
+      
+      const workbook = new ExcelJS.Workbook();
+      
+      this.logger.log('Criando planilha de resultados');
+      await this.createResultsWorksheet(workbook, users);
+      
+      this.logger.log('Criando planilha de informações adicionais');
+      this.createAdditionalInfoWorksheet(workbook, users);
+      
+      this.logger.log('Criando planilha de respostas');
+      await this.createResponsesWorksheet(workbook, users);
+      
+      this.logger.log('Configurando download do Excel');
+      await this.configureExcelDownload(res, 'TabeladeResultados.xlsx', workbook);
+      
+      this.logger.log('Excel gerado com sucesso');
+    } catch (error) {
+      this.logger.error(`Erro ao gerar Excel: ${error.message}`);
+      throw error;
+    }
+  }
 
-    const workbook = new ExcelJS.Workbook();
+  private async createResultsWorksheet(workbook: ExcelJS.Workbook, users: any[]): Promise<void> {
     const worksheet = workbook.addWorksheet('Resultados');
-
-    const groupNames = [
-      'modelo de liderança', 'propósito', 'valores', 
-      'Estrutura Sistêmica', 'DF Intenção', 'DP Vocação', 'DC Conexão', 'DE Valoração', 
-      'Roda do Aprendizado - Lirença educadora', 'Conversa de Valor - Qualidade de diálogo', 
-      'Princípio da Linha d`água - Autonomia e autoridade', 'Experiência - Fidelização e engajamento', 
-      'Ilha das Competências - Pontencial da equipe', 'Operação Curiosidade - Comportamento empreendedor', 
-      'Metaprojeto - Trabalho com significado', 'Metaprocesso - Eficácia operacional', 'Musa - Inovação e criatividade', 
-      'Balanço das Riquezas - Resultados plenos', 'Planta de Serviços - Momentos da verdade'
-    ];
-
+    const groupNames = this.getGroupNames();
+  
     worksheet.columns = [
       { header: 'NOME', key: 'nome', width: 30 },
-      ...groupNames.map(groupName => ({ header: groupName, key: groupName, width: 20 }))
+      ...groupNames.map((groupName) => ({
+        header: groupName,
+        key: groupName,
+        width: 20,
+      })),
     ];
-
+  
     worksheet.autoFilter = {
       from: 'A1',
-      to: 'T1'
+      to: `${String.fromCharCode(65 + groupNames.length)}1`,
     };
-
+  
     for (const user of users) {
       const scores = await this.calculateGroupScores(user.id);
       const row = { nome: user.nome, ...scores };
       worksheet.addRow(row);
     }
-    
+  }
+  
+  private createAdditionalInfoWorksheet(workbook: ExcelJS.Workbook, users: any[]): void {
     const additionalInfoSheet = workbook.addWorksheet('inf.adicionais');
-
-    additionalInfoSheet.columns = [
+    const dynamicKeys = this.extractDynamicKeysFromUsers(users);
+  
+    const columns: Partial<ExcelJS.Column>[] = [
       { header: 'NOME', key: 'nome', width: 30 },
-      { header: 'TEMPO_EMPRESA', key: 'tempoEmpresa', width: 20 },
       { header: 'FILIAL', key: 'filial', width: 20 },
-      { header: 'FUNCAO', key: 'funcao', width: 20 },
-      { header: 'GENERO', key: 'genero', width: 20 },
-      { header: 'CIDADE', key: 'cidade', width: 20 },
-      { header: 'ESCOLARIDADE/FORMAÇÃO', key: 'escolaridade', width: 25 },
-      { header: 'ESTADO_CIVIL', key: 'estadoCivil', width: 20 },
-      { header: 'NUMERO_FILHOS', key: 'filhos', width: 15 },
-      { header: 'LIVROS_POR_ANO', key: 'quantidadeLivros', width: 15 },
-      { header: 'PRINCIPAL_ATIVIDADE_DIA', key: 'hobbie', width: 25 },
-      { header: 'TEMPO_CASA/TRABALHO', key: 'tempoCasaTrab', width: 20 },
-      { header: 'MODELO_TRABALHO', key: 'modeloTrabalho', width: 20 },
-      { header: 'PARTICIPACAO_GRUPO', key: 'partGrupos', width: 25 },
     ];
-
-    additionalInfoSheet.autoFilter = {
-      from: 'A1',
-      to: 'N1'
-    };
-
-    for (const user of users) {
-      const row = {
-        nome: user.nome,
-        tempoEmpresa: this.getDynamicField(user, 'tempoEmpresa'),
-        filial: user.filial?.filial,
-        funcao: this.getDynamicField(user, 'funcao'),
-        genero: this.getDynamicField(user, 'genero'),
-        cidade: this.getDynamicField(user, 'cidade'),
-        escolaridade: this.getDynamicField(user, 'escolaridade'),
-        estadoCivil: this.getDynamicField(user, 'estadoCivil'),
-        filhos: this.getDynamicField(user, 'filhos'),
-        quantidadeLivros: this.getDynamicField(user, 'quantidadeLivros'),
-        hobbie: this.getDynamicField(user, 'hobbie'),
-        tempoCasaTrab: this.getDynamicField(user, 'tempoCasaTrab'),
-        modeloTrabalho: this.getDynamicField(user, 'modeloTrabalho'),
-        partGrupos: this.getDynamicField(user, 'partGrupos'),
+  
+    Array.from(dynamicKeys)
+      .sort()
+      .forEach((key) => {
+        columns.push({
+          header: key.toUpperCase(),
+          key: key,
+          width: 20,
+        });
+      });
+  
+    additionalInfoSheet.columns = columns as ExcelJS.Column[];
+  
+    if (columns.length > 0) {
+      additionalInfoSheet.autoFilter = {
+        from: 'A1',
+        to: `${String.fromCharCode(65 + columns.length - 1)}1`,
       };
+    }
+  
+    for (const user of users) {
+      const row: any = {
+        nome: user.nome,
+        filial: user.filial?.filial,
+      };
+  
+      if (user.dynamicResponses) {
+        Object.entries(user.dynamicResponses).forEach(([key, value]) => {
+          row[key] = value;
+        });
+      }
+  
       additionalInfoSheet.addRow(row);
     }
-    
+  }
+  
+  private async createResponsesWorksheet(workbook: ExcelJS.Workbook, users: any[]): Promise<void> {
     const responsesSheet = workbook.addWorksheet('Respostas');
-
+  
     responsesSheet.columns = [
       { header: 'NOME', key: 'nome', width: 30 },
       { header: 'PERGUNTA', key: 'pergunta', width: 20 },
       { header: 'VALOR', key: 'valor', width: 20 },
-      { header: 'TEMPO_EMPRESA', key: 'tempoEmpresa', width: 20 },
       { header: 'FILIAL', key: 'filial', width: 20 },
       { header: 'FUNCAO', key: 'funcao', width: 20 },
       { header: 'GENERO', key: 'genero', width: 20 },
       { header: 'CIDADE', key: 'cidade', width: 20 },
     ];
-
+  
     responsesSheet.autoFilter = {
       from: 'A1',
-      to: 'H1'
+      to: 'G1',
     };
-
+  
     for (const user of users) {
-      const sortedResponses = user.respostas.sort((a, b) => a.question - b.question);
+      const sortedResponses = user.respostas.sort(
+        (a, b) => a.question - b.question,
+      );
       for (const response of sortedResponses) {
         const questionText = await this.getQuestionText(response.question);
         const row = {
           nome: user.nome,
           pergunta: questionText,
           valor: response.score,
-          tempoEmpresa: this.getDynamicField(user, 'tempoEmpresa'),
           filial: user.filial?.filial,
           funcao: this.getDynamicField(user, 'funcao'),
-          genero: this.getDynamicField(user, 'genero'),
           cidade: this.getDynamicField(user, 'cidade'),
+          genero: this.getDynamicField(user, 'genero'),
         };
         responsesSheet.addRow(row);
       }
     }
-
+  }
+  
+  private async configureExcelDownload(res: Response, filename: string, workbook: ExcelJS.Workbook): Promise<void> {
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename=' + 'TabeladeResultados.xlsx',
+      `attachment; filename=${filename}`,
     );
-
-    await workbook.xlsx.write(res);
-    res.end();
+    
+    try {
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      this.logger.error(`Erro ao escrever Excel: ${error.message}`);
+      throw new Error(`Falha ao gerar arquivo Excel: ${error.message}`);
+    }
+  }
+  
+  private getGroupNames(): string[] {
+    return [
+      'modelo de liderança',
+      'propósito',
+      'valores',
+      'Estrutura Sistêmica',
+      'DF Intenção',
+      'DP Vocação',
+      'DC Conexão',
+      'DE Valoração',
+      'Roda do Aprendizado - Licença educadora',
+      'Conversa de Valor - Qualidade de diálogo',
+      'Princípio da Linha d`água - Autonomia e autoridade',
+      'Experiência - Fidelização e engajamento',
+      'Ilha das Competências - Pontencial da equipe',
+      'Operação Curiosidade - Comportamento empreendedor',
+      'Metaprojeto - Trabalho com significado',
+      'Metaprocesso - Eficácia operacional',
+      'Musa - Inovação e criatividade',
+      'Balanço das Riquezas - Resultados plenos',
+      'Planta de Serviços - Momentos da verdade',
+    ];
+  }
+  
+  private extractDynamicKeysFromUsers(users: any[]): Set<string> {
+    const dynamicKeys = new Set<string>();
+    users.forEach((user) => {
+      if (user.dynamicResponses) {
+        Object.keys(user.dynamicResponses).forEach((key) => {
+          dynamicKeys.add(key);
+        });
+      }
+    });
+    return dynamicKeys;
   }
 }

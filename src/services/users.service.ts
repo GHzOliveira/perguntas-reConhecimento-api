@@ -9,7 +9,7 @@ import { UsersException } from '../exceptions/users.exception';
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  private ajv: Ajv;
+  private readonly ajv: Ajv;
 
   constructor(private readonly usersRepository: UsersRepository) {
     this.ajv = new Ajv({ allErrors: true });
@@ -66,7 +66,6 @@ export class UsersService {
     schema?: any
   ): Promise<Users> {
     try {
-      // Verifica se o usuário existe
       const user = await this.findUserById(userId);
       if (!user) {
         throw new UsersException(`Usuário ${userId} não encontrado`);
@@ -113,7 +112,6 @@ export class UsersService {
     }
   }
 
-  // Métodos existentes
   async findUserById(id: number): Promise<Users | null> {
     return this.usersRepository.findById(id);
   }

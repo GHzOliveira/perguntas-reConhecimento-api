@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Users, UserResponse, Prisma } from '@prisma/client';
+import { Users, UserResponse } from '@prisma/client';
 import { IUsersRepository } from '../interface/users.interface';
 import { CreateUserDto } from '../dto/dto-users/create-user.dto';
 import { UsersException } from '../exceptions/users.exception';
@@ -143,7 +143,7 @@ export class UsersRepository implements IUsersRepository {
         select: { dynamicResponses: true },
       });
       
-      if (!user || !user.dynamicResponses) {
+      if (!user.dynamicResponses) {
         return null;
       }
       
