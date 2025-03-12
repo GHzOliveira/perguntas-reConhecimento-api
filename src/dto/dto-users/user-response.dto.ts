@@ -8,8 +8,17 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Nome do usuário', example: 'João da Silva' })
   nome: string;
 
-  @ApiProperty({ description: 'Email do usuário', example: 'joao@exemplo.com' })
-  email: string;
+  @ApiProperty({ description: 'Cidade do usuário' })
+  cidade: string;
+
+  @ApiProperty({ description: 'Função Macro do usuário' })
+  funcaoMacro: string;
+
+  @ApiProperty({ description: 'Data de admissão' })
+  dataAdmissao: string;
+
+  @ApiProperty({ description: 'Gênero do usuário' })
+  genero: string;
 
   @ApiProperty({ description: 'ID da filial', example: 1 })
   filialId: number;
@@ -17,16 +26,21 @@ export class UserResponseDto {
   @ApiProperty({ description: 'ID da empresa', example: 1 })
   companyId: number;
 
-  @ApiProperty({ description: 'Indica se o usuário respondeu o formulário', example: true })
+  @ApiProperty({
+    description: 'Indica se o usuário respondeu o formulário',
+    example: true,
+  })
   respondeuForm: boolean;
 
   @ApiPropertyOptional({
     description: 'Campos dinâmicos não fixos',
     type: 'object',
-    additionalProperties: true
+    additionalProperties: true,
   })
   dynamicResponses?: Record<string, any>;
 }
 
-export class UserResponseArrayDto extends StandardResponseDto<UserResponseDto[]> {}
+export class UserResponseArrayDto extends StandardResponseDto<
+  UserResponseDto[]
+> {}
 export class SingleUserResponseDto extends StandardResponseDto<UserResponseDto> {}

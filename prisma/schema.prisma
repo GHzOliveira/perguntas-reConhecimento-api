@@ -69,7 +69,10 @@ model DynamicForm {
 model Users {
   id                Int      @id @default(autoincrement())
   nome              String
-  email             String   @unique
+  cidade           String
+  funcaoMacro       String
+  dataAdmissao      DateTime
+  genero            String
   filialId          Int
   companyId         Int
   dynamicResponses  Json?

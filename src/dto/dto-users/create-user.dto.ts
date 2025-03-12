@@ -1,14 +1,26 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEmail, IsNumber, IsBoolean, Min, IsObject, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, Min, IsObject, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ description: 'Nome do usuário' })
+  @ApiProperty({ description: 'Nome do usuário', example: 'João da Silva' })
   @IsString()
   nome: string;
-  
-  @ApiProperty({ description: 'Email do usuário' })
-  @IsEmail()
-  email: string;
+
+  @ApiProperty({ description: 'Cidade do usuário' })
+  @IsString()
+  cidade: string;
+
+  @ApiProperty({ description: 'Função Macro do usuário' })
+  @IsString()
+  funcaoMacro: string;
+
+  @ApiProperty({ description: 'Data de admissão' })
+  @IsString()
+  dataAdmissao: string;
+
+  @ApiProperty({ description: 'Gênero do usuário' })
+  @IsString()
+  genero: string;
   
   @ApiProperty({ description: 'ID da filial', minimum: 1 })
   @IsNumber()

@@ -28,6 +28,8 @@ import {
   UserResponseArrayDto,
 } from 'src/dto/dto-users/user-response.dto';
 import { StandardResponseDto } from 'src/dto/common/standard-response.dto';
+import { BulkCreateUsersDto } from 'src/dto/dto-users/bulk-create-users.dto';
+import { UserMockService } from 'src/services/user-mock.service';
 
 interface StandardResponse<T> {
   success: boolean;
@@ -38,7 +40,10 @@ interface StandardResponse<T> {
 @ApiTags('Usuários')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userMockService: UserMockService,
+  ) {}
 
   // Método auxiliar privado para obter o esquema ativo para uma empresa
   private async getActiveSchemaForCompany(companyId: number): Promise<any> {
@@ -436,5 +441,32 @@ export class UsersController {
       message: 'Dados dinâmicos encontrados com sucesso',
       data: dynamicData,
     };
+  }
+
+  @Post('bulk')
+  @ApiOperation({ summary: 'Criar múltiplos usuários aleatórios para testes' })
+  @ApiBody({ type: BulkCreateUsersDto })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Usuários criados com sucesso',
+  })
+  async createBulkUsers(
+    @Body() bulkData: BulkCreateUsersDto,
+  ): Promise<StandardResponseDto<{ count: number }>> {
+    try {
+      const users = await this.userMockService.createMockUsers(
+        bulkData.quantity,
+        bulkData.companyId,
+        bulkData.filialId,
+      );
+
+      return {
+        success: true,
+        message: `${users.length} usuários criados com sucesso`,
+        data: { count: users.length },
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }
