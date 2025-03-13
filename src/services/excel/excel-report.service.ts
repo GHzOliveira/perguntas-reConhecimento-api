@@ -10,7 +10,8 @@ import { AdditionalInfoGenerator } from 'src/generators/additional-info.generato
 import { ResponsesWorksheetGenerator } from 'src/generators/responses.generator';
 import { GeneralWorksheetGenerator } from 'src/generators/general.generator';
 import { FilialWorksheetGenerator } from 'src/generators/filial.generator';
-import { FilialAveragesWorksheetGenerator } from 'src/interface/filial-averages.generator';
+import { FilialAveragesWorksheetGenerator } from 'src/generators/filial-averages.generator';
+import { FuncaoAveragesWorksheetGenerator } from 'src/generators/funcao-averages.generator';
 
 @Injectable()
 export class ExcelReportService {
@@ -23,6 +24,7 @@ export class ExcelReportService {
     private readonly generalWorksheetGenerator: GeneralWorksheetGenerator,
     private readonly filialWorksheetGenerator: FilialWorksheetGenerator,
     private readonly filialAveragesWorksheetGenerator: FilialAveragesWorksheetGenerator,
+    private readonly funcaoAveragesWorksheetGenerator: FuncaoAveragesWorksheetGenerator,
     private readonly resultsWorksheetGenerator: ResultsWorksheetGenerator,
     private readonly additionalInfoGenerator: AdditionalInfoGenerator,
     private readonly responsesWorksheetGenerator: ResponsesWorksheetGenerator,
@@ -90,6 +92,13 @@ export class ExcelReportService {
         users,
         filiais,
         scoreService: this.scoreService
+      });
+
+      this.logger.log('Criando planilha de médias por função');
+      await this.funcaoAveragesWorksheetGenerator.generate(workbook, {
+        users,
+        scoreService: this.scoreService,
+        filiais
       });
       
       this.logger.log('Criando planilha de resultados');

@@ -32,21 +32,17 @@ export class FilialWorksheetGenerator implements WorksheetGenerator {
     const teamScores = await scoreService.calculateAverageGroupScores(filialUsers, 
       user => user.funcaoMacro.includes('Equipe'));
     
-    // Identificar diretores da filial
     const diretores = filialUsers.filter(user => user.funcaoMacro.includes('Diretor'));
     
-    // Criar colunas base
     const columns = [
       { key: 'aspect', width: 20 }, 
       { key: 'element', width: 60 },
     ];
     
-    // Adicionar uma coluna para cada diretor
     diretores.forEach((diretor, index) => {
       columns.push({ key: `diretor${index}`, width: 15 });
     });
     
-    // Adicionar colunas finais
     columns.push(
       { key: 'group', width: 15 },
       { key: 'managers', width: 15 }, 
@@ -55,15 +51,12 @@ export class FilialWorksheetGenerator implements WorksheetGenerator {
     
     worksheet.columns = columns;
     
-    // Preparar cabeçalho
     const headerRow = ['FILIAL', ''];
     
-    // Adicionar nome dos diretores no cabeçalho
     diretores.forEach(diretor => {
       headerRow.push(diretor.nome);
     });
     
-    // Adicionar cabeçalhos finais
     headerRow.push('GRUPO', 'GERENTES', 'EQUIPE');
     
     const row = worksheet.addRow(headerRow);

@@ -7,7 +7,7 @@ export class UserMockService {
   constructor(private readonly prisma: PrismaService) {}
 
   generateMockUser(companyId: number, filialId: number) {
-    const funcoes = ['Equipe'];
+    const funcoes = ['Diretor', 'Gerente', 'Equipe', 'Conselho'];
     const generos = ['Masculino', 'Feminino'];
     const modelosTrabalho = ['Presencial', 'Híbrido', 'Remoto'];
     const estadosCivis = [
