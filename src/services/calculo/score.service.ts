@@ -38,7 +38,7 @@ export class ScoreService {
         questionIds: [53, 42],
       },
       'Ilha das Competências - Potencial da equipe': {
-        questionIds: [54, 53],
+        questionIds: [54, 43],
       },
       'Operação Curiosidade - Comportamento empreendedor': {
         questionIds: [44, 55],
