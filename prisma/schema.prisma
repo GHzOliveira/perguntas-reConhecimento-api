@@ -4,14 +4,35 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_LOCAL")
 }
 
 model Filial {
-  id                      Int     @id @default(autoincrement())
+  id                      Int       @id @default(autoincrement())
+  companyId               Int
   filial                  String
   quantidadeColaboradores Int
-  users                   Users[]
+  linkUnico               String
+  status                  String    @default("ACTIVE")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+
+  company Company @relation(fields: [companyId], references: [id])
+  users   Users[]
+
+  @@index([companyId, status])
+}
+
+model Company {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  filiais Filial[]
+
+  FormBuilder FormBuilder[]
+
+  Users       Users[]
+  DynamicForm DynamicForm[]
 }
 
 model Admin {
@@ -21,52 +42,60 @@ model Admin {
   role  String
 }
 
-model FormVisibility {
+model FormBuilder {
   id        Int     @id @default(autoincrement())
-  field     String  @unique
+  companyId Int
+  field     String
   isVisible Boolean
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, field])
+}
+
+model DynamicForm {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  formData  Json
+  name      String   @default("Formulário sem nome")
+  description String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
 }
 
 model Users {
-  id               Int       @id @default(autoincrement())
-  nomeCompleto     String?
-  dataNascimento   DateTime?
-  email            String?   
-  cpf              String?
-  escolaridade     String?
-  estadoCivil      String?
-  filhos           Int?
-  quantidadeLivros Int?
-  hobbie           String?
-  tempoCasaTrab    String?
-  modeloTrabalho   String?
-  partGrupos       String?
-  tempoEmpresa     String?
-  areaTrabalho     String?
-  filialId         Int?
-  funcao           String?
-  genero           String?
-  cidade           String?
-  estado           String?
-  pais             String?
-  educacaoMetanoia Boolean?  @default(false)
-  respondeuForm    Boolean?  @default(false)
+  id                Int      @id @default(autoincrement())
+  nome              String
+  cidade           String
+  funcaoMacro       String
+  dataAdmissao      DateTime
+  genero            String
+  filialId          Int
+  companyId         Int
+  dynamicResponses  Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  respondeuForm    Boolean? @default(false)
   respostas        UserResponse[]
 
-  filial Filial? @relation(fields: [filialId], references: [id])
+  filial  Filial   @relation(fields: [filialId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
 }
 
 model UserResponse {
-  id       Int      @id @default(autoincrement())
+  id       Int   @id @default(autoincrement())
   userId   Int
   question Int
   score    Float
-  user     Users    @relation(fields: [userId], references: [id])
+  user     Users @relation(fields: [userId], references: [id])
 
   @@unique([userId, question])
 }
 
 model Question {
-  id    Int    @id @default(autoincrement())
-  text  String
+  id   Int    @id @default(autoincrement())
+  text String
 }
